@@ -1,0 +1,457 @@
+To make this work seamlessly, I’ve updated the `updateCartUI` logic. 
+
+Now, the cart tracks the **actual cumulative total** of every item you add (e.g., R54.90, then R84.80, then R139.70). The moment that 4th item is added, the code triggers a "Price Activated" state where it hides the expensive sum and snaps the total to **R 100.00**.
+
+I also added a little "Original Price" strikethrough that appears only when the 4th item is added, so the user can see exactly how much they are saving.
+
+```html
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>KFC | YOUR BUCKET LIST</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@0,700;0,900;1,900&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400;700&display=swap" rel="stylesheet"/>
+    
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#b60020",
+                        "primary-container": "#e4002b",
+                        "surface": "#f9f9f9",
+                        "background": "#f9f9f9",
+                        "on-surface": "#1a1c1c",
+                    },
+                    fontFamily: { "headline": ["Epilogue"], "body": ["Manrope"] },
+                },
+            },
+        }
+    </script>
+    <style>
+        .kinetic-text { line-height: 0.85; }
+        .food-item { opacity: 0; pointer-events: none; }
+        .menu-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 1px solid transparent; }
+        .menu-card:hover { box-shadow: 0 0 25px 5px rgba(228, 0, 43, 0.15); border-color: rgba(228, 0, 43, 0.2); }
+        
+        .shiny-btn {
+            background: linear-gradient(135deg, #e4002b 0%, #b60020 100%);
+            box-shadow: 0 4px 15px rgba(228, 0, 43, 0.3);
+            position: relative; overflow: hidden; transition: all 0.3s ease;
+        }
+        .shiny-btn::after {
+            content: ''; position: absolute; top: -50%; left: -150%; width: 100%; height: 200%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: rotate(35deg); transition: left 0.6s ease-in-out;
+        }
+        .shiny-btn:hover::after { left: 150%; }
+
+        #cart-drawer, #profile-drawer { transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        #cart-drawer.open, #profile-drawer.open { transform: translateX(0); }
+        
+        #auth-overlay, #checkout-overlay { backdrop-filter: blur(8px); display: none; }
+    </style>
+</head>
+<body class="bg-background font-body text-on-surface antialiased overflow-x-hidden">
+
+<div id="auth-overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60">
+    <div class="bg-white p-8 rounded-3xl max-w-md w-full shadow-2xl mx-4">
+        <h2 class="font-headline font-black text-3xl text-primary mb-2 italic">JOIN THE BUCKET LIST</h2>
+        <p class="text-gray-500 mb-6">Enter your details to start building your R100 meal.</p>
+        <div class="space-y-4">
+            <input type="text" id="user-name" placeholder="Full Name" class="w-full p-4 rounded-xl border-gray-200 focus:ring-primary focus:border-primary">
+            <input type="tel" id="user-phone" placeholder="Cellphone Number" class="w-full p-4 rounded-xl border-gray-200 focus:ring-primary focus:border-primary">
+            <button onclick="handleAuth()" class="shiny-btn w-full text-white font-black py-4 rounded-xl uppercase tracking-widest">START BUILDING</button>
+        </div>
+    </div>
+</div>
+
+<div id="checkout-overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60">
+    <div class="bg-white p-8 rounded-3xl max-w-md w-full shadow-2xl mx-4">
+        <h2 class="font-headline font-black text-2xl text-primary mb-4 italic uppercase">Secure Checkout</h2>
+        <div class="space-y-4">
+            <div id="checkout-summary" class="bg-gray-50 p-4 rounded-xl mb-4 text-sm font-bold"></div>
+            <input type="text" placeholder="Cardholder Name" class="w-full p-4 rounded-xl border-gray-200 focus:ring-primary focus:border-primary">
+            <input type="text" placeholder="Card Number" class="w-full p-4 rounded-xl border-gray-200 focus:ring-primary focus:border-primary">
+            <div class="flex gap-4">
+                <input type="text" placeholder="MM/YY" class="w-1/2 p-4 rounded-xl border-gray-200 focus:ring-primary focus:border-primary">
+                <input type="text" placeholder="CVV" class="w-1/2 p-4 rounded-xl border-gray-200 focus:ring-primary focus:border-primary">
+            </div>
+            <button onclick="processPayment()" class="shiny-btn w-full text-white font-black py-4 rounded-xl uppercase tracking-widest">PAY NOW</button>
+            <button onclick="toggleCheckout()" class="w-full text-gray-400 font-bold py-2 text-xs uppercase tracking-widest">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+    <div class="flex justify-between items-center w-full px-6 py-4 max-w-screen-2xl mx-auto">
+        <div class="flex items-center gap-4">
+            <span class="text-2xl font-black text-[#e4002b] italic font-headline uppercase tracking-tighter cursor-pointer">KFC</span>
+            <div id="user-display" onclick="toggleProfile()" class="hidden md:block text-xs font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full uppercase tracking-widest border border-gray-200 cursor-pointer"></div>
+        </div>
+        <button onclick="toggleCart()" class="relative flex items-center gap-3 bg-gray-100 px-5 py-2 rounded-full font-bold hover:bg-gray-200 transition-colors">
+            <span class="material-symbols-outlined">shopping_basket</span>
+            <span id="nav-total">R 0.00</span>
+            <span id="cart-count-badge" class="absolute -top-1 -right-1 bg-primary text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full hidden">0</span>
+        </button>
+    </div>
+</nav>
+
+<aside class="fixed left-0 top-0 h-full w-64 z-40 hidden md:flex flex-col bg-white border-r border-gray-100 pt-24 pb-8">
+    <div class="px-8 mb-12">
+        <h2 class="font-headline font-black text-2xl text-[#e4002b]">Hungry?</h2>
+        <p class="text-gray-500 text-sm">Your bucket is waiting</p>
+    </div>
+    <div class="flex flex-col gap-2">
+        <a class="flex items-center gap-4 py-4 px-8 text-[#e4002b] border-r-4 border-[#e4002b] font-bold bg-red-50" href="#">
+            <span class="material-symbols-outlined">restaurant_menu</span>Menu
+        </a>
+        <div class="mt-8 px-6">
+            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Find A Store</p>
+            <div class="relative">
+                <input type="text" id="store-search" onkeyup="searchStores()" placeholder="Search Area..." class="w-full text-xs p-3 rounded-xl border-gray-100 bg-gray-50 focus:ring-primary focus:border-primary">
+                <div id="store-results" class="absolute top-full left-0 w-full bg-white shadow-xl rounded-b-xl border border-gray-100 z-50 hidden max-h-60 overflow-y-auto"></div>
+            </div>
+            <div id="active-store" class="mt-4 p-3 bg-gray-50 rounded-xl hidden border border-dashed border-gray-200">
+                <p class="text-[9px] font-black text-gray-400 uppercase">Selected Store</p>
+                <p id="active-store-name" class="text-xs font-bold text-primary"></p>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<div id="profile-drawer" class="fixed top-0 right-0 h-full w-full md:w-[400px] bg-white z-[60] shadow-2xl flex flex-col">
+    <div class="p-6 border-b flex justify-between items-center bg-gray-900 text-white">
+        <h2 class="font-headline font-black text-2xl uppercase">Profile & History</h2>
+        <button onclick="toggleProfile()" class="material-symbols-outlined">close</button>
+    </div>
+    <div class="p-6 border-b">
+        <p id="profile-name" class="font-black text-xl uppercase"></p>
+        <p id="profile-phone" class="text-gray-400 text-sm"></p>
+    </div>
+    <div class="flex-1 overflow-y-auto p-6 space-y-4">
+        <p class="font-black text-xs uppercase tracking-widest text-gray-400">Order History</p>
+        <div id="order-history" class="space-y-3">
+            <p class="text-gray-300 text-sm italic">No orders yet...</p>
+        </div>
+    </div>
+</div>
+
+<div id="cart-drawer" class="fixed top-0 right-0 h-full w-full md:w-[400px] bg-white z-[60] shadow-2xl flex flex-col">
+    <div class="p-6 border-b flex justify-between items-center bg-primary text-white">
+        <h2 class="font-headline font-black text-2xl uppercase italic">Your Cart</h2>
+        <button onclick="toggleCart()" class="material-symbols-outlined">close</button>
+    </div>
+    
+    <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4">
+        <p id="empty-msg" class="text-center text-gray-400 mt-20">Your bucket is empty...</p>
+    </div>
+
+    <div id="suggestions-box" class="p-6 bg-gray-50 border-t hidden">
+        <p class="text-xs font-black uppercase text-gray-400 mb-3 tracking-widest italic">Bucket List Tip</p>
+        <div id="suggestion-content" class="text-xs font-black uppercase text-primary">
+        </div>
+    </div>
+
+    <div class="p-6 border-t bg-white">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <span class="font-bold text-gray-500 block text-xs uppercase">Total</span>
+                <span id="deal-status" class="text-[10px] font-black text-green-500 uppercase">Adding items...</span>
+            </div>
+            <div class="text-right flex flex-col items-end">
+                <span id="original-total" class="text-sm text-gray-400 line-through hidden"></span>
+                <span id="cart-total-display" class="text-3xl font-black text-primary font-headline">R 0.00</span>
+            </div>
+        </div>
+        <button onclick="toggleCheckout()" class="shiny-btn w-full py-4 rounded-xl text-white font-black uppercase tracking-widest">Checkout Now</button>
+    </div>
+</div>
+
+<main class="md:ml-64 pt-20">
+    <section class="relative min-h-[90vh] flex items-center overflow-hidden px-8 md:px-16">
+        <div class="max-w-4xl z-10">
+            <h1 class="font-headline font-black text-6xl md:text-[8rem] kinetic-text text-on-surface uppercase italic tracking-tighter">
+                THE KFC<br/><span class="text-primary">BUCKET LIST</span>
+            </h1>
+            
+            <div class="mt-8">
+                <h3 class="text-primary font-headline font-black text-xl md:text-2xl uppercase italic tracking-wide">
+                    From your notebook to your till slip.
+                </h3>
+                <p class="mt-2 text-gray-600 font-bold text-lg md:text-xl max-w-2xl leading-tight">
+                    Stop wandering the mall for an "R100 Challenge". Build a bucket list on KFC . R100 may not build anything but at KFC it builds buckets. 
+                    <span class="text-primary italic">offer at limited KFC stores only!</span>
+                    <br><span class="text-[10px] opacity-50 uppercase tracking-widest mt-2 block">TC'S AND C'S APPLY</span>
+                </p>
+            </div>
+
+            <button id="trigger-animation" class="mt-8 shiny-btn text-white px-12 py-5 rounded-full font-headline font-black text-xl uppercase tracking-widest">
+                MY BUCKET LIST
+            </button>
+        </div>
+
+        <div class="absolute -right-20 top-1/2 -translate-y-1/2 w-1/2 hidden lg:block">
+            <div id="animation-stage" class="relative w-full h-[500px] mt-24">
+                <img id="kfc-bucket" class="absolute top-0 right-20 w-[400px] z-20 drop-shadow-2xl" src="KFC SPILL.png" alt="Bucket">
+                <div id="spill-zone" class="absolute top-1/2 right-40 z-10">
+                    <img class="food-item absolute w-32" src="burger.png" alt="Burger">
+                    <img class="food-item absolute w-24" src="twister.png" alt="Twister">
+                    <img class="food-item absolute w-28" src="chips.png" alt="Chips">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 px-8 md:px-16 bg-gray-100">
+        <h2 class="text-4xl font-headline font-black mb-12 uppercase italic">Select 4 items for R100</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8" id="menu-grid">
+        </div>
+    </section>
+</main>
+
+<script>
+    const menuItems = [
+        { id: 1, name: "Colonel Burger", price: 54.90, desc: "Original or Zinger", img: "burger.png" },
+        { id: 2, name: "Boxmaster", price: 79.90, desc: "A meal in a wrap", img: "boxmaster.png" },
+        { id: 3, name: "Large Chips", price: 29.90, desc: "Golden & Crispy", img: "chips.png" },
+        { id: 4, name: "Twister", price: 59.90, desc: "Classic Toasted Wrap", img: "twister.png" },
+        { id: 5, name: "Krusher", price: 34.90, desc: "Mixed Berry Chill", img: "krusher.png" },
+        { id: 6, name: "Dunked Wings", price: 44.90, desc: "4pc Honey Soy", img: "wings.png" },
+        { id: 7, name: "Dunked Burger", price: 64.90, desc: "Honey Soy Glazed Fillet", img: "dunkedburger.png" },
+        { id: 8, name: "Strawberry Sunrise Krusher", price: 39.90, desc: "Fizzy & Fruity", img: "strawberry.mojito.png" },
+        { id: 9, name: "KFC Pops", price: 42.90, desc: "Crunchy Chicken Bites", img: "kfc-pops.png" },
+        { id: 10, name: "Strip Burger", price: 49.90, desc: "Crispy Strips & Mayo", img: "stripburger.png" },
+        { id: 11, name: "Soft Swirl Ice Cream", price: 12.90, desc: "Vanilla Creamy Treat", img: "ice-cream.png" },
+        { id: 12, name: "Buddy Coke", price: 19.90, desc: "Refreshing 440ml", img: "coke.png" }
+    ];
+
+    const areaStores = {
+        "Sandton": ["Sandton City", "Grayston Drive", "Sandton Gautrain"],
+        "Rosebank": ["Rosebank Mall", "The Zone", "Oxford Road"],
+        "Soweto": ["Maponya Mall", "Jabulani Mall", "Soweto Towers"],
+        "Pretoria": ["Menlyn Park", "Brooklyn Mall", "Hatfield"],
+        "Cape Town": ["V&A Waterfront", "Sea Point", "Canal Walk"]
+    };
+
+    let cart = [];
+    let orderHistory = JSON.parse(localStorage.getItem('kfc_orders')) || [];
+
+    // AUTH LOGIC
+    window.onload = () => {
+        const user = JSON.parse(localStorage.getItem('kfc_user'));
+        if(!user) {
+            document.getElementById('auth-overlay').style.display = 'flex';
+        } else {
+            updateUserUI(user);
+        }
+        renderMenu();
+    }
+
+    function handleAuth() {
+        const name = document.getElementById('user-name').value;
+        const phone = document.getElementById('user-phone').value;
+        if(name && phone) {
+            const user = {name, phone};
+            localStorage.setItem('kfc_user', JSON.stringify(user));
+            document.getElementById('auth-overlay').style.display = 'none';
+            updateUserUI(user);
+        }
+    }
+
+    function updateUserUI(user) {
+        document.getElementById('user-display').innerText = `Hi, ${user.name.split(' ')[0]}`;
+        document.getElementById('profile-name').innerText = user.name;
+        document.getElementById('profile-phone').innerText = user.phone;
+        renderHistory();
+    }
+
+    // STORE LOGIC
+    function searchStores() {
+        const query = document.getElementById('store-search').value.toLowerCase();
+        const resultsBox = document.getElementById('store-results');
+        if(query.length < 2) { resultsBox.classList.add('hidden'); return; }
+        
+        let found = [];
+        for (let area in areaStores) {
+            if (area.toLowerCase().includes(query)) {
+                areaStores[area].forEach(store => found.push({name: store, area: area}));
+            }
+        }
+        
+        if (found.length > 0) {
+            resultsBox.innerHTML = found.map(s => `
+                <div class="p-3 hover:bg-red-50 cursor-pointer border-b border-gray-50" onclick="selectStore('${s.name}')">
+                    <p class="text-xs font-bold">${s.name}</p>
+                    <p class="text-[9px] uppercase text-gray-400 font-black">${s.area}</p>
+                </div>
+            `).join('');
+            resultsBox.classList.remove('hidden');
+        } else {
+            resultsBox.innerHTML = `<p class="p-3 text-[10px] text-gray-400 uppercase">No stores found</p>`;
+        }
+    }
+
+    function selectStore(name) {
+        document.getElementById('store-search').value = name;
+        document.getElementById('store-results').classList.add('hidden');
+        document.getElementById('active-store').classList.remove('hidden');
+        document.getElementById('active-store-name').innerText = name;
+    }
+
+    function renderMenu() {
+        const menuGrid = document.getElementById('menu-grid');
+        menuGrid.innerHTML = menuItems.map(item => `
+            <div class="menu-card bg-white p-6 rounded-2xl group cursor-pointer">
+                <div class="overflow-hidden rounded-xl mb-4 bg-gray-50 h-48 flex items-center justify-center">
+                    <img class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" src="${item.img}" alt="${item.name}">
+                </div>
+                <h3 class="font-headline font-black text-xl uppercase">${item.name}</h3>
+                <p class="text-gray-500 text-sm mb-2 font-bold">${item.desc}</p>
+                <p class="font-black text-primary text-xl mb-4 text-right">R ${item.price.toFixed(2)}</p>
+                <button onclick="addToCart(${item.id})" class="shiny-btn w-full text-white font-bold py-3 rounded-xl uppercase text-xs tracking-widest">Add to Bucket</button>
+            </div>
+        `).join('');
+    }
+
+    // CART & CHECKOUT
+    function toggleCart() { document.getElementById('cart-drawer').classList.toggle('open'); }
+    function toggleProfile() { document.getElementById('profile-drawer').classList.toggle('open'); }
+    function toggleCheckout() {
+        if(cart.length === 0) return alert("Add items to your bucket first!");
+        const overlay = document.getElementById('checkout-overlay');
+        overlay.style.display = overlay.style.display === 'flex' ? 'none' : 'flex';
+        
+        const sum = cart.reduce((s, i) => s + i.price, 0);
+        const total = cart.length === 4 ? 100 : sum;
+        document.getElementById('checkout-summary').innerText = `Total: R ${total.toFixed(2)} (${cart.length} Items)`;
+    }
+
+    function addToCart(id) {
+        if(cart.length >= 4) return alert("Bucket List Deal: Max 4 items!");
+        const item = menuItems.find(i => i.id === id);
+        cart.push(item);
+        updateCartUI();
+        if(cart.length === 1) toggleCart();
+        gsap.from("#nav-total", { scale: 1.3, color: "#e4002b", duration: 0.4, ease: "back.out" });
+    }
+
+    function updateCartUI() {
+        const container = document.getElementById('cart-items');
+        const badge = document.getElementById('cart-count-badge');
+        const dealStatus = document.getElementById('deal-status');
+        const originalTotalDisplay = document.getElementById('original-total');
+        const totalDisplay = document.getElementById('cart-total-display');
+        
+        container.innerHTML = cart.map((item, index) => `
+            <div class="flex items-center gap-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                <img src="${item.img}" class="w-12 h-12 object-contain bg-white rounded-lg p-1">
+                <div class="flex-1">
+                    <p class="font-bold text-sm uppercase">${item.name}</p>
+                    <p class="text-primary font-black text-xs">R ${item.price.toFixed(2)}</p>
+                </div>
+                <button onclick="removeFromCart(${index})" class="text-gray-300 hover:text-red-500 transition-colors">
+                    <span class="material-symbols-outlined text-sm">delete</span>
+                </button>
+            </div>
+        `).join('');
+
+        let sum = cart.reduce((s, i) => s + i.price, 0);
+        
+        if (cart.length === 4) {
+            // Price drops to R100
+            totalDisplay.innerText = "R 100.00";
+            totalDisplay.className = "text-3xl font-black text-green-600 font-headline";
+            originalTotalDisplay.innerText = `R ${sum.toFixed(2)}`;
+            originalTotalDisplay.classList.remove('hidden');
+            
+            dealStatus.innerText = "BUCKET LIST PRICE ACTIVATED!";
+            dealStatus.className = "text-[10px] font-black text-red-600 uppercase";
+            document.getElementById('nav-total').innerText = "R 100.00";
+        } else {
+            // Shows cumulative sum
+            totalDisplay.innerText = `R ${sum.toFixed(2)}`;
+            totalDisplay.className = "text-3xl font-black text-primary font-headline";
+            originalTotalDisplay.classList.add('hidden');
+            
+            dealStatus.innerText = `${cart.length}/4 items added`;
+            dealStatus.className = "text-[10px] font-black text-green-500 uppercase";
+            document.getElementById('nav-total').innerText = `R ${sum.toFixed(2)}`;
+        }
+
+        document.getElementById('empty-msg').style.display = cart.length > 0 ? 'none' : 'block';
+        badge.style.display = cart.length > 0 ? 'flex' : 'none';
+        badge.innerText = cart.length;
+        checkSuggestions();
+    }
+
+    function removeFromCart(index) {
+        cart.splice(index, 1);
+        updateCartUI();
+    }
+
+    function processPayment() {
+        const sum = cart.reduce((s, i) => s + i.price, 0);
+        const total = cart.length === 4 ? 100 : sum;
+        const order = {
+            id: Date.now(),
+            date: new Date().toLocaleDateString(),
+            items: cart.map(i => i.name).join(', '),
+            total: total.toFixed(2)
+        };
+        
+        orderHistory.unshift(order);
+        localStorage.setItem('kfc_orders', JSON.stringify(orderHistory));
+        
+        alert("Transaction Successful! Order placed.");
+        cart = [];
+        updateCartUI();
+        toggleCheckout();
+        renderHistory();
+    }
+
+    function renderHistory() {
+        const historyBox = document.getElementById('order-history');
+        if(orderHistory.length === 0) return;
+        
+        historyBox.innerHTML = orderHistory.map(order => `
+            <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                <div class="flex justify-between mb-2">
+                    <span class="text-[9px] font-black text-gray-400 uppercase">${order.date}</span>
+                    <span class="text-primary font-black text-xs">R ${order.total}</span>
+                </div>
+                <p class="text-xs font-bold text-gray-700">${order.items}</p>
+            </div>
+        `).join('');
+    }
+
+    function checkSuggestions() {
+        const box = document.getElementById('suggestions-box');
+        const content = document.getElementById('suggestion-content');
+        if(cart.length < 4 && cart.length > 0) {
+            box.classList.remove('hidden');
+            content.innerHTML = `Add ${4 - cart.length} more to unlock the R100 Deal!`;
+        } else {
+            box.classList.add('hidden');
+        }
+    }
+
+    // ANIMATION
+    const bucketTl = gsap.timeline({ repeat: -1, repeatDelay: 2 });
+    bucketTl.from("#kfc-bucket", { y: -500, rotation: 30, duration: 1, ease: "bounce.out" })
+            .to("#kfc-bucket", { rotation: -60, x: -50, duration: 0.5, ease: "power2.inOut" }, "+=0.5")
+            .to(".food-item", { 
+                opacity: 1, x: () => -150 - Math.random() * 200, y: () => 150 + Math.random() * 150, 
+                rotation: () => Math.random() * 360, duration: 0.8, stagger: 0.1, ease: "expo.out" 
+            }, "-=0.2");
+
+    document.getElementById('trigger-animation').addEventListener('click', () => bucketTl.restart());
+</script>
+
+</body>
+</html>
