@@ -6,10 +6,8 @@
     <title>KFC | YOUR BUCKET LIST</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    
     <link href="https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@0,700;0,900;1,900&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400;700&display=swap" rel="stylesheet"/>
-    
     <script id="tailwind-config">
         tailwind.config = {
             theme: {
@@ -21,7 +19,10 @@
                         "background": "#f9f9f9",
                         "on-surface": "#1a1c1c",
                     },
-                    fontFamily: { "headline": ["Epilogue"], "body": ["Manrope"] },
+                    fontFamily: {
+                        "headline": ["Epilogue"],
+                        "body": ["Manrope"]
+                    },
                 },
             },
         }
@@ -31,620 +32,512 @@
         .food-item { opacity: 0; pointer-events: none; }
         .menu-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 1px solid transparent; }
         .menu-card:hover { box-shadow: 0 0 25px 5px rgba(228, 0, 43, 0.15); border-color: rgba(228, 0, 43, 0.2); }
-        
         #trigger-animation:hover { box-shadow: 0 0 25px 5px rgba(228, 0, 43, 0.3); border-color: rgba(228, 0, 43, 0.4); }
-
-        .shiny-btn {
-            background: linear-gradient(135deg, #e4002b 0%, #b60020 100%);
-            box-shadow: 0 4px 15px rgba(228, 0, 43, 0.3);
-            position: relative; overflow: hidden; transition: all 0.3s ease;
-        }
-        .shiny-btn::after {
-            content: ''; position: absolute; top: -50%; left: -150%; width: 100%; height: 200%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transform: rotate(35deg); transition: left 0.6s ease-in-out;
-        }
+        .shiny-btn { background: linear-gradient(135deg, #e4002b 0%, #b60020 100%); box-shadow: 0 4px 15px rgba(228, 0, 43, 0.3); position: relative; overflow: hidden; transition: all 0.3s ease; }
+        .shiny-btn::after { content: ''; position: absolute; top: -50%; left: -150%; width: 100%; height: 200%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent); transform: rotate(35deg); transition: left 0.6s ease-in-out; }
         .shiny-btn:hover::after { left: 150%; }
-
         #cart-drawer, #profile-drawer { transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         #cart-drawer.open, #profile-drawer.open { transform: translateX(0); }
-        
         #auth-overlay, #checkout-overlay, #celebration-overlay, #order-success-overlay { backdrop-filter: blur(8px); display: none; }
-        
         .confetti { position: absolute; width: 10px; height: 10px; border-radius: 2px; z-index: 110; }
-
         .liquid-container { position: relative; overflow: hidden; background: #e5e7eb; height: 12px; border-radius: 99px; width: 100%; }
         #liquid-fill { position: absolute; bottom: 0; left: 0; width: 0%; height: 100%; background: #e4002b; transition: width 0.6s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
-
         .ticker-wrap { width: 100%; overflow: hidden; background: #1a1c1c; color: white; padding: 12px 0; border-top: 4px solid #b60020; }
         .ticker { display: inline-block; white-space: nowrap; animation: ticker 25s infinite linear; }
         .ticker-item { display: inline-block; padding: 0 2.5rem; font-family: 'Epilogue'; font-weight: 900; text-transform: uppercase; font-style: italic; font-size: 0.75rem; letter-spacing: 0.1em; }
         @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-
-        .glow-button:hover { 
-            box-shadow: 0 0 20px rgba(228, 0, 43, 0.8); 
-            background: #e4002b !important; 
-            color: white !important; 
-            border-color: #e4002b !important;
-            transform: scale(1.02);
-        }
+        .glow-button:hover { box-shadow: 0 0 20px rgba(228, 0, 43, 0.8); background: #e4002b !important; color: white !important; border-color: #e4002b !important; transform: scale(1.02); }
     </style>
 </head>
 <body class="bg-background font-body text-on-surface antialiased overflow-x-hidden">
-
-<div id="auth-overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60">
-    <div class="bg-white p-8 rounded-3xl max-w-md w-full shadow-2xl mx-4">
-        <h2 class="font-headline font-black text-3xl text-primary mb-2 italic">JOIN THE BUCKET LIST</h2>
-        <p class="text-gray-500 mb-6">Enter your details to start building your R100 meal.</p>
-        <div class="space-y-4">
-            <input type="text" id="user-name" placeholder="Full Name" class="w-full p-4 rounded-xl border-gray-200 focus:ring-primary focus:border-primary">
-            <input type="tel" id="user-phone" placeholder="Cellphone Number" class="w-full p-4 rounded-xl border-gray-200 focus:ring-primary focus:border-primary">
-            <button onclick="handleAuth()" class="shiny-btn w-full text-white font-black py-4 rounded-xl uppercase tracking-widest">START BUILDING</button>
-        </div>
-    </div>
-</div>
-
-<div id="celebration-overlay" class="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 overflow-hidden">
-    <div id="celebration-content" class="text-center relative">
-        <img id="pop-bucket" src="KFC SPILL.png" class="w-64 md:w-80 mx-auto drop-shadow-[0_0_30px_rgba(255,255,255,0.4)]" alt="Bucket">
-        <div class="mt-8">
-            <h2 class="font-headline font-black text-4xl md:text-6xl text-white italic uppercase tracking-tighter mb-2">BUCKET LISTED!</h2>
-            <p id="savings-text" class="text-green-400 font-black text-2xl uppercase italic tracking-widest"></p>
-        </div>
-    </div>
-</div>
-
-<div id="checkout-overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60">
-    <div class="bg-white p-8 rounded-3xl max-w-md w-full shadow-2xl mx-4">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="font-headline font-black text-2xl text-primary italic uppercase">Secure Checkout</h2>
-            <button onclick="toggleCheckout()" class="text-gray-400 font-bold text-xs uppercase hover:text-primary">← Back to Cart</button>
-        </div>
-        <div class="space-y-4">
-            <div id="checkout-summary" class="bg-gray-50 p-4 rounded-xl text-sm font-bold border border-gray-100"></div>
-            
-            <div class="bg-red-50 p-4 rounded-xl border border-red-100 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined text-primary">volunteer_activism</span>
-                    <div>
-                        <p class="text-[10px] font-black uppercase text-primary leading-tight">Add R2 for Hope</p>
-                        <p class="text-[9px] text-gray-500">Donate to the Hope Foundation</p>
-                    </div>
-                </div>
-                <input type="checkbox" id="hope-donation" onchange="updateTotalWithHope()" class="rounded text-primary focus:ring-primary h-5 w-5">
-            </div>
-
-            <input type="text" placeholder="Cardholder Name" class="w-full p-4 rounded-xl border-gray-200 focus:ring-primary focus:border-primary">
-            <input type="text" placeholder="Card Number" class="w-full p-4 rounded-xl border-gray-200 focus:ring-primary focus:border-primary">
-            <div class="flex gap-4">
-                <input type="text" placeholder="MM/YY" class="w-1/2 p-4 rounded-xl border-gray-200 focus:ring-primary focus:border-primary">
-                <input type="text" placeholder="CVV" class="w-1/2 p-4 rounded-xl border-gray-200 focus:ring-primary focus:border-primary">
-            </div>
-            <button onclick="processPayment()" class="shiny-btn w-full text-white font-black py-4 rounded-xl uppercase tracking-widest">PAY NOW</button>
-        </div>
-    </div>
-</div>
-
-<div id="order-success-overlay" class="fixed inset-0 z-[120] flex items-center justify-center bg-black/70">
-    <div class="bg-white p-8 rounded-3xl max-w-md w-full shadow-2xl mx-4 text-center">
-        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span class="material-symbols-outlined text-green-600 text-4xl">check_circle</span>
-        </div>
-        <h2 class="font-headline font-black text-2xl text-primary uppercase italic mb-2">Order Confirmed!</h2>
-        <p class="text-gray-500 text-sm mb-6">Your bucket is being prepared with love.</p>
-        
-        <div class="bg-gray-50 rounded-2xl p-6 mb-6 space-y-3">
-            <div class="flex justify-between">
-                <span class="text-xs text-gray-400 font-black uppercase">Order Number</span>
-                <span id="success-order-num" class="text-xs font-black">#KFC-0000</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-xs text-gray-400 font-black uppercase">Est. Wait Time</span>
-                <span class="text-xs font-black text-primary">15 - 20 Minutes</span>
-            </div>
-        </div>
-
-        <div class="flex items-center gap-3 bg-gray-100 p-4 rounded-xl mb-6">
-            <input type="checkbox" id="sms-notify" class="rounded text-primary focus:ring-primary">
-            <label for="sms-notify" class="text-left text-[10px] font-black uppercase text-gray-600 leading-tight">
-                Notify me via SMS when ready<br>
-                <span class="font-normal text-gray-400">Perfect for running errands!</span>
-            </label>
-        </div>
-
-        <button onclick="closeSuccess()" class="w-full bg-gray-900 text-white font-black py-4 rounded-xl uppercase tracking-widest text-xs">Close</button>
-    </div>
-</div>
-
-<nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
-    <div class="flex justify-between items-center w-full px-6 py-4 max-w-screen-2xl mx-auto">
-        <div class="flex items-center gap-4">
-            <span class="text-2xl font-black text-[#e4002b] italic font-headline uppercase tracking-tighter cursor-pointer">KFC</span>
-            <div id="user-display" onclick="toggleProfile()" class="hidden md:block text-xs font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full uppercase tracking-widest border border-gray-200 cursor-pointer"></div>
-        </div>
-        <button onclick="toggleCart()" class="relative flex items-center gap-3 bg-gray-100 px-5 py-2 rounded-full font-bold hover:bg-gray-200 transition-colors">
-            <span class="material-symbols-outlined">shopping_basket</span>
-            <span id="nav-total">R 0.00</span>
-            <span id="cart-count-badge" class="absolute -top-1 -right-1 bg-primary text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full hidden">0</span>
-        </button>
-    </div>
-</nav>
-
-<aside class="fixed left-0 top-0 h-full w-64 z-40 hidden md:flex flex-col bg-white border-r border-gray-100 pt-24 pb-8">
-    <div class="px-8 mb-12">
-        <h2 class="font-headline font-black text-2xl text-[#e4002b]">Hungry?</h2>
-        <p class="text-gray-500 text-sm">Your bucket is waiting</p>
-    </div>
-    <div class="flex flex-col gap-2">
-        <a class="flex items-center gap-4 py-4 px-8 text-[#e4002b] border-r-4 border-[#e4002b] font-bold bg-red-50" href="#">
-            <span class="material-symbols-outlined">restaurant_menu</span>Menu
-        </a>
-        <div class="mt-8 px-6">
-            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Find A Store</p>
-            <div class="relative">
-                <input type="text" id="store-search" onkeyup="searchStores()" placeholder="Search Area..." class="w-full text-xs p-3 rounded-xl border-gray-100 bg-gray-50 focus:ring-primary focus:border-primary">
-                <div id="store-results" class="absolute top-full left-0 w-full bg-white shadow-xl rounded-b-xl border border-gray-100 z-50 hidden max-h-60 overflow-y-auto"></div>
-            </div>
-            <div id="active-store" class="mt-4 p-3 bg-gray-50 rounded-xl hidden border border-dashed border-gray-200">
-                <p class="text-[9px] font-black text-gray-400 uppercase">Selected Store</p>
-                <p id="active-store-name" class="text-xs font-bold text-primary"></p>
+    <div id="auth-overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60">
+        <div class="bg-white p-8 rounded-3xl max-w-md w-full shadow-2xl mx-4">
+            <h2 class="font-headline font-black text-3xl text-primary mb-2 italic">BUILD YOUR BUCKET LIST</h2>
+            <p class="text-gray-500 mb-6">Enter your details to start building your R100 meal.</p>
+            <div class="space-y-4">
+                <input type="text" id="user-name" placeholder="Full Name" class="w-full p-4 rounded-xl border-gray-200 focus:ring-primary focus:border-primary">
+                <input type="tel" id="user-phone" maxlength="10" placeholder="Cellphone Number (10 digits)" class="w-full p-4 rounded-xl border-gray-200 focus:ring-primary focus:border-primary">
+                <button onclick="handleAuth()" class="shiny-btn w-full text-white font-black py-4 rounded-xl uppercase tracking-widest">START BUILDING</button>
             </div>
         </div>
     </div>
-</aside>
 
-<div id="profile-drawer" class="fixed top-0 right-0 h-full w-full md:w-[400px] bg-white z-[60] shadow-2xl flex flex-col">
-    <div class="p-6 border-b flex justify-between items-center bg-gray-900 text-white">
-        <h2 class="font-headline font-black text-2xl uppercase">Profile & History</h2>
-        <button onclick="toggleProfile()" class="material-symbols-outlined">close</button>
-    </div>
-    <div class="p-6 border-b flex justify-between items-center">
-        <div>
-            <p id="profile-name" class="font-black text-xl uppercase"></p>
-            <p id="profile-phone" class="text-gray-400 text-sm"></p>
-        </div>
-        <div class="flex flex-col gap-2">
-            <button onclick="handleLogout()" class="text-[10px] font-black uppercase text-red-500 hover:underline">Logout</button>
-            <button onclick="addAnotherProfile()" class="text-[10px] font-black uppercase text-gray-400 hover:underline">Add Profile</button>
-        </div>
-    </div>
-    <div class="flex-1 overflow-y-auto p-6 space-y-4">
-        <p class="font-black text-xs uppercase tracking-widest text-gray-400">Order History</p>
-        <div id="order-history" class="space-y-3">
-            <p class="text-gray-300 text-sm italic">No orders yet...</p>
-        </div>
-    </div>
-</div>
-
-<div id="cart-drawer" class="fixed top-0 right-0 h-full w-full md:w-[400px] bg-white z-[60] shadow-2xl flex flex-col">
-    <div class="p-6 border-b flex justify-between items-center bg-primary text-white">
-        <h2 class="font-headline font-black text-2xl uppercase italic">Your Cart</h2>
-        <button onclick="toggleCart()" class="material-symbols-outlined">close</button>
-    </div>
-    
-    <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4">
-        <p id="empty-msg" class="text-center text-gray-400 mt-20">Your bucket is empty...</p>
-    </div>
-
-    <div id="suggestions-box" class="p-6 bg-red-50 border-t border-b border-red-100 hidden">
-        <p class="text-[10px] font-black uppercase text-red-400 mb-2 tracking-widest italic">Bucket Suggestion:</p>
-        <div class="liquid-container mb-3">
-            <div id="liquid-fill"></div>
-        </div>
-        <div id="suggestion-content" class="text-sm font-black uppercase text-primary mb-3 leading-tight"></div>
-        <div id="suggestion-quick-add"></div>
-    </div>
-
-    <div class="p-6 bg-white">
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <span class="font-bold text-gray-500 block text-xs uppercase">Total</span>
-                <span id="deal-status" class="text-[10px] font-black text-green-500 uppercase">Adding items...</span>
-            </div>
-            <div class="text-right flex flex-col items-end">
-                <span id="original-total" class="text-sm text-gray-400 line-through hidden"></span>
-                <span id="cart-total-display" class="text-3xl font-black text-primary font-headline">R 0.00</span>
-            </div>
-        </div>
-        <button onclick="toggleCheckout()" class="shiny-btn w-full py-4 rounded-xl text-white font-black uppercase tracking-widest">Checkout Now</button>
-    </div>
-</div>
-
-<main class="md:ml-64 pt-20">
-    <section class="relative min-h-[90vh] flex items-center overflow-hidden px-8 md:px-16">
-        <div class="max-w-4xl z-10">
-            <h1 class="font-headline font-black text-6xl md:text-[7.85rem] kinetic-text text-on-surface uppercase italic tracking-tighter">
-                THE KFC<br/><span class="text-primary">BUCKET LIST</span>
-            </h1>
-            
+    <div id="celebration-overlay" class="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 overflow-hidden">
+        <div id="celebration-content" class="text-center relative">
+            <img id="pop-bucket" src="KFC SPILL.png" class="w-64 md:w-80 mx-auto drop-shadow-[0_0_30px_rgba(255,255,255,0.4)]" alt="Bucket">
             <div class="mt-8">
-                <h3 class="text-primary font-headline font-black text-xl md:text-2xl uppercase italic tracking-wide">
-                    From your notebook to your till slip.
-                </h3>
-                <p class="mt-2 text-gray-600 font-bold text-lg md:text-xl max-w-2xl leading-tight">
-                    R100 may not be enough to build anything , but at KFC it builds bucket lists . Stop wandering the mall for the "R100 Challenge". Build a bucket at KFC.
-                  <br> <p><span class="text-primary italic">Offer at limited KFC stores only!</span></p></br>
-                    <span class="text-[10px] opacity-50 uppercase tracking-widest mt-2 block">TC'S AND C'S APPLY</span>
-                </p>
+                <h2 class="font-headline font-black text-4xl md:text-6xl text-white italic uppercase tracking-tighter mb-2">BUCKET LISTED!</h2>
+                <p id="savings-text" class="text-green-400 font-black text-2xl uppercase italic tracking-widest"></p>
             </div>
+        </div>
+    </div>
 
-            <button onclick="scrollToMenu()" id="trigger-animation" class="mt-8 shiny-btn text-white px-12 py-5 rounded-full font-headline font-black text-xl uppercase tracking-widest transition-all duration-300">
-                MY BUCKET LIST
+    <div id="checkout-overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60">
+        <div class="bg-white p-8 rounded-3xl max-w-md w-full shadow-2xl mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-headline font-black text-2xl text-primary italic uppercase">Secure Checkout</h2>
+                <button onclick="toggleCheckout()" class="text-gray-400 font-bold text-xs uppercase hover:text-primary">← Back to Cart</button>
+            </div>
+            <div class="space-y-4">
+                <div id="checkout-summary" class="bg-gray-50 p-4 rounded-xl text-sm font-bold border border-gray-100"></div>
+                <div class="bg-red-50 p-4 rounded-xl border border-red-100 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary">volunteer_activism</span>
+                        <div>
+                            <p class="text-[10px] font-black uppercase text-primary leading-tight">Add R2 for Hope</p>
+                            <p class="text-[9px] text-gray-500">Donate to the Hope Foundation</p>
+                        </div>
+                    </div>
+                    <input type="checkbox" id="hope-donation" onchange="updateTotalWithHope()" class="rounded text-primary focus:ring-primary h-5 w-5">
+                </div>
+                <input type="text" placeholder="Cardholder Name" class="w-full p-4 rounded-xl border-gray-200 focus:ring-primary focus:border-primary">
+                <input type="text" placeholder="Card Number" class="w-full p-4 rounded-xl border-gray-200 focus:ring-primary focus:border-primary">
+                <div class="flex gap-4">
+                    <input type="text" placeholder="MM/YY" class="w-1/2 p-4 rounded-xl border-gray-200 focus:ring-primary focus:border-primary">
+                    <input type="text" placeholder="CVV" class="w-1/2 p-4 rounded-xl border-gray-200 focus:ring-primary focus:border-primary">
+                </div>
+                <button onclick="processPayment()" class="shiny-btn w-full text-white font-black py-4 rounded-xl uppercase tracking-widest">PAY NOW</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="order-success-overlay" class="fixed inset-0 z-[120] flex items-center justify-center bg-black/70">
+        <div class="bg-white p-8 rounded-3xl max-w-md w-full shadow-2xl mx-4 text-center">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="material-symbols-outlined text-green-600 text-4xl">check_circle</span>
+            </div>
+            <h2 class="font-headline font-black text-2xl text-primary uppercase italic mb-2">Order Confirmed!</h2>
+            <p class="text-gray-500 text-sm mb-6">Your bucket is being prepared with love.</p>
+            <div class="bg-gray-50 rounded-2xl p-6 mb-6 space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-xs text-gray-400 font-black uppercase">Order Number</span>
+                    <span id="success-order-num" class="text-xs font-black">#KFC-0000</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-xs text-gray-400 font-black uppercase">Est. Wait Time</span>
+                    <span class="text-xs font-black text-primary">15 - 20 Minutes</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 bg-gray-100 p-4 rounded-xl mb-6">
+                <input type="checkbox" id="sms-notify" class="rounded text-primary focus:ring-primary">
+                <label for="sms-notify" class="text-left text-[10px] font-black uppercase text-gray-600 leading-tight"> Notify me via SMS when ready<br> <span class="font-normal text-gray-400">Perfect for running errands!</span> </label>
+            </div>
+            <button onclick="closeSuccess()" class="w-full bg-gray-900 text-white font-black py-4 rounded-xl uppercase tracking-widest text-xs">Close</button>
+        </div>
+    </div>
+
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <div class="flex justify-between items-center w-full px-6 py-4 max-w-screen-2xl mx-auto">
+            <div class="flex items-center gap-4">
+                <span class="text-2xl font-black text-[#e4002b] italic font-headline uppercase tracking-tighter cursor-pointer">KFC</span>
+                <div id="user-display" onclick="toggleProfile()" class="hidden md:block text-xs font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full uppercase tracking-widest border border-gray-200 cursor-pointer"></div>
+            </div>
+            <button onclick="toggleCart()" class="relative flex items-center gap-3 bg-gray-100 px-5 py-2 rounded-full font-bold hover:bg-gray-200 transition-colors">
+                <span class="material-symbols-outlined">shopping_basket</span>
+                <span id="nav-total">R 0.00</span>
+                <span id="cart-count-badge" class="absolute -top-1 -right-1 bg-primary text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full hidden">0</span>
             </button>
         </div>
+    </nav>
 
-        <div class="absolute -right-40 top-1/2 -translate-y-1/2 w-1/2 hidden lg:block">
-            <div id="animation-stage" class="relative w-full h-[500px] mt-24 -mt-12">
-                <img id="kfc-bucket" class="absolute top-0 right-10 w-[400px] z-20 drop-shadow-2xl" src="KFC MAIN IMAGE.png" alt="Bucket">
-                <div id="spill-zone" class="absolute top-1/2 right-40 z-10">
-                    <img class="food-item absolute w-32" src="burger.png" alt="Burger">
-                    <img class="food-item absolute w-24" src="twister.png" alt="Twister">
-                    <img class="food-item absolute w-28" src="chips.png" alt="Chips">
+    <aside class="fixed left-0 top-0 h-full w-64 z-40 hidden md:flex flex-col bg-white border-r border-gray-100 pt-24 pb-8">
+        <div class="px-8 mb-12">
+            <h2 class="font-headline font-black text-2xl text-[#e4002b]">Hungry?</h2>
+            <p class="text-gray-500 text-sm">Your bucket is waiting</p>
+        </div>
+        <div class="flex flex-col gap-2">
+            <a class="flex items-center gap-4 py-4 px-8 text-[#e4002b] border-r-4 border-[#e4002b] font-bold bg-red-50" href="#">
+                <span class="material-symbols-outlined">restaurant_menu</span>Menu 
+            </a>
+            <div class="mt-8 px-6">
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Find A Store</p>
+                <div class="relative">
+                    <input type="text" id="store-search" onkeyup="searchStores()" placeholder="Search Area..." class="w-full text-xs p-3 rounded-xl border-gray-100 bg-gray-50 focus:ring-primary focus:border-primary">
+                    <div id="store-results" class="absolute top-full left-0 w-full bg-white shadow-xl rounded-b-xl border border-gray-100 z-50 hidden max-h-60 overflow-y-auto"></div>
+                </div>
+                <div id="active-store" class="mt-4 p-3 bg-gray-50 rounded-xl hidden border border-dashed border-gray-200">
+                    <p class="text-[9px] font-black text-gray-400 uppercase">Selected Store</p>
+                    <p id="active-store-name" class="text-xs font-bold text-primary"></p>
                 </div>
             </div>
         </div>
-    </section>
+    </aside>
 
-    <div class="ticker-wrap">
-        <div class="ticker">
-            <span class="ticker-item">BUILD YOUR OWN BUCKET</span>
-            <span class="ticker-item">4 ITEMS FOR R100</span>
-            <span class="ticker-item">OFFER AVAILABLE AT LIMITED STORES</span>
-            <span class="ticker-item">BUILD YOUR OWN BUCKET</span>
-            <span class="ticker-item">4 ITEMS FOR R100</span>
-            <span class="ticker-item">OFFER AVAILABLE AT LIMITED STORES</span>
-            <span class="ticker-item">BUILD YOUR OWN BUCKET</span>
-            <span class="ticker-item">4 ITEMS FOR R100</span>
-            <span class="ticker-item">OFFER AVAILABLE AT LIMITED STORES</span>
+    <div id="profile-drawer" class="fixed top-0 right-0 h-full w-full md:w-[400px] bg-white z-[60] shadow-2xl flex flex-col">
+        <div class="p-6 border-b flex justify-between items-center bg-gray-900 text-white">
+            <h2 class="font-headline font-black text-2xl uppercase">Profile & History</h2>
+            <button onclick="toggleProfile()" class="material-symbols-outlined">close</button>
+        </div>
+        <div class="p-6 border-b flex justify-between items-center">
+            <div>
+                <p id="profile-name" class="font-black text-xl uppercase"></p>
+                <p id="profile-phone" class="text-gray-400 text-sm"></p>
+            </div>
+            <div class="flex flex-col gap-2">
+                <button onclick="handleLogout()" class="text-[10px] font-black uppercase text-red-500 hover:underline">Logout</button>
+                <button onclick="addAnotherProfile()" class="text-[10px] font-black uppercase text-gray-400 hover:underline">Add Profile</button>
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto p-6 space-y-4">
+            <p class="font-black text-xs uppercase tracking-widest text-gray-400">Order History</p>
+            <div id="order-history" class="space-y-3">
+                <p class="text-gray-300 text-sm italic">No orders yet...</p>
+            </div>
         </div>
     </div>
 
-    <section id="menu-section" class="py-20 px-8 md:px-16 bg-gray-100">
-        <h2 class="text-4xl font-headline font-black mb-12 uppercase italic">Select 4 items for R100</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8" id="menu-grid">
+    <div id="cart-drawer" class="fixed top-0 right-0 h-full w-full md:w-[400px] bg-white z-[60] shadow-2xl flex flex-col">
+        <div class="p-6 border-b flex justify-between items-center bg-primary text-white">
+            <h2 class="font-headline font-black text-2xl uppercase italic">Your Cart</h2>
+            <button onclick="toggleCart()" class="material-symbols-outlined">close</button>
         </div>
-    </section>
-</main>
+        <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4">
+            <p id="empty-msg" class="text-center text-gray-400 mt-20">Your bucket is empty...</p>
+        </div>
+        <div id="suggestions-box" class="p-6 bg-red-50 border-t border-b border-red-100 hidden">
+            <p class="text-[10px] font-black uppercase text-red-400 mb-2 tracking-widest italic">Bucket Suggestion:</p>
+            <div class="liquid-container mb-3">
+                <div id="liquid-fill"></div>
+            </div>
+            <div id="suggestion-content" class="text-sm font-black uppercase text-primary mb-3 leading-tight"></div>
+            <div id="suggestion-quick-add"></div>
+        </div>
+        <div class="p-6 bg-white">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <span class="font-bold text-gray-500 block text-xs uppercase">Total</span>
+                    <span id="deal-status" class="text-[10px] font-black text-green-500 uppercase">Adding items...</span>
+                </div>
+                <div class="text-right flex flex-col items-end">
+                    <span id="original-total" class="text-sm text-gray-400 line-through hidden"></span>
+                    <span id="cart-total-display" class="text-3xl font-black text-primary font-headline">R 0.00</span>
+                </div>
+            </div>
+            <button onclick="toggleCheckout()" class="shiny-btn w-full py-4 rounded-xl text-white font-black uppercase tracking-widest">Checkout Now</button>
+        </div>
+    </div>
 
-<script>
-    const menuItems = [
-        { id: 1, name: "Colonel Burger", price: 54.90, desc: "Original or Zinger", img: "burger.png" },
-        { id: 2, name: "Boxmaster", price: 79.90, desc: "A meal in a wrap", img: "boxmaster.png" },
-        { id: 3, name: "Large Chips", price: 29.90, desc: "Golden & Crispy", img: "chips.png" },
-        { id: 4, name: "Twister", price: 59.90, desc: "Classic Toasted Wrap", img: "twister.png" },
-        { id: 5, name: "Krusher", price: 34.90, desc: "Mixed Berry Chill", img: "krusher.png" },
-        { id: 6, name: "Dunked Wings", price: 44.90, desc: "4pc Honey Soy", img: "wings.png" },
-        { id: 7, name: "Dunked Burger", price: 64.90, desc: "Honey Soy Glazed Fillet", img: "dunkedburger.png" },
-        { id: 8, name: "Strawberry Sunrise Krusher", price: 39.90, desc: "Fizzy & Fruity", img: "strawberry.mojito.png" },
-        { id: 9, name: "KFC Pops", price: 42.90, desc: "Crunchy Chicken Bites", img: "kfc-pops.png" },
-        { id: 10, name: "Strip Burger", price: 49.90, desc: "Crispy Strips & Mayo", img: "stripburger.png" },
-        { id: 11, name: "Soft Swirl Ice Cream", price: 12.90, desc: "Vanilla Creamy Treat", img: "ice-cream.png" },
-        { id: 12, name: "Buddy Coke", price: 19.90, desc: "Refreshing 440ml", img: "coke.png" }
-    ];
+    <main class="md:ml-64 pt-20">
+        <section class="relative min-h-[90vh] flex items-center overflow-hidden px-8 md:px-16">
+            <div class="max-w-4xl z-10">
+                <h1 class="font-headline font-black text-6xl md:text-[7.85rem] kinetic-text text-on-surface uppercase italic tracking-tighter"> THE KFC<br/><span class="text-primary">BUCKET LIST</span> </h1>
+                <div class="mt-8">
+                    <h3 class="text-primary font-headline font-black text-xl md:text-2xl uppercase italic tracking-wide"> From your notebook to your till slip. </h3>
+                    <p class="mt-2 text-gray-600 font-bold text-lg md:text-xl max-w-2xl leading-tight"> R100 may not be enough to build anything , but at KFC it builds bucket lists . Stop wandering the mall for the "R100 Challenge". Build a bucket at KFC. <br> <p><span class="text-primary italic">Offer at limited KFC stores only!</span></p></br> <span class="text-[10px] opacity-50 uppercase tracking-widest mt-2 block">TC'S AND C'S APPLY</span> </p>
+                </div>
+                <button onclick="scrollToMenu()" id="trigger-animation" class="mt-8 shiny-btn text-white px-12 py-5 rounded-full font-headline font-black text-xl uppercase tracking-widest transition-all duration-300"> MY BUCKET LIST </button>
+            </div>
+            <div class="absolute -right-40 top-1/2 -translate-y-1/2 w-1/2 hidden lg:block">
+                <div id="animation-stage" class="relative w-full h-[500px] mt-24 -mt-12">
+                    <img id="kfc-bucket" class="absolute top-0 right-10 w-[400px] z-20 drop-shadow-2xl" src="KFC MAIN IMAGE.png" alt="Bucket">
+                    <div id="spill-zone" class="absolute top-1/2 right-40 z-10">
+                        <img class="food-item absolute w-32" src="burger.png" alt="Burger">
+                        <img class="food-item absolute w-24" src="twister.png" alt="Twister">
+                        <img class="food-item absolute w-28" src="chips.png" alt="Chips">
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    const areaStores = {
-        "Sandton": ["Sandton City", "Grayston Drive", "Sandton Gautrain"],
-        "Rosebank": ["Rosebank Mall", "The Zone", "Oxford Road"],
-        "Soweto": ["Maponya Mall", "Jabulani Mall", "Soweto Towers"],
-        "Pretoria": ["Menlyn Park", "Brooklyn Mall", "Hatfield"],
-        "Cape Town": ["V&A Waterfront", "Sea Point", "Canal Walk"]
-    };
+        <div class="ticker-wrap">
+            <div class="ticker">
+                <span class="ticker-item">BUILD YOUR OWN BUCKET</span>
+                <span class="ticker-item">4 ITEMS FOR R100</span>
+                <span class="ticker-item">OFFER AVAILABLE AT LIMITED STORES</span>
+                <span class="ticker-item">BUILD YOUR OWN BUCKET</span>
+                <span class="ticker-item">4 ITEMS FOR R100</span>
+                <span class="ticker-item">OFFER AVAILABLE AT LIMITED STORES</span>
+                <span class="ticker-item">BUILD YOUR OWN BUCKET</span>
+                <span class="ticker-item">4 ITEMS FOR R100</span>
+                <span class="ticker-item">OFFER AVAILABLE AT LIMITED STORES</span>
+            </div>
+        </div>
 
-    let cart = [];
-    let orderHistory = JSON.parse(localStorage.getItem('kfc_orders')) || [];
+        <section id="menu-section" class="py-20 px-8 md:px-16 bg-gray-100">
+            <h2 class="text-4xl font-headline font-black mb-12 uppercase italic">Select 4 items for R100</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8" id="menu-grid"> </div>
+        </section>
+    </main>
 
-    window.onload = () => {
-        const user = JSON.parse(localStorage.getItem('kfc_user'));
-        if(!user) {
+    <script>
+        const menuItems = [
+            { id: 1, name: "Colonel Burger", price: 54.90, desc: "Original or Zinger", img: "burger.png" },
+            { id: 2, name: "Boxmaster", price: 79.90, desc: "A meal in a wrap", img: "boxmaster.png" },
+            { id: 3, name: "Large Chips", price: 29.90, desc: "Golden & Crispy", img: "chips.png" },
+            { id: 4, name: "Twister", price: 59.90, desc: "Classic Toasted Wrap", img: "twister.png" },
+            { id: 5, name: "Krusher", price: 34.90, desc: "Mixed Berry Chill", img: "krusher.png" },
+            { id: 6, name: "Dunked Wings", price: 44.90, desc: "4pc Honey Soy", img: "wings.png" },
+            { id: 7, name: "Dunked Burger", price: 64.90, desc: "Honey Soy Glazed Fillet", img: "dunkedburger.png" },
+            { id: 8, name: "Strawberry Sunrise Krusher", price: 39.90, desc: "Fizzy & Fruity", img: "strawberry.mojito.png" },
+            { id: 9, name: "KFC Pops", price: 42.90, desc: "Crunchy Chicken Bites", img: "kfc-pops.png" },
+            { id: 10, name: "Strip Burger", price: 49.90, desc: "Crispy Strips & Mayo", img: "stripburger.png" },
+            { id: 11, name: "Soft Swirl Ice Cream", price: 12.90, desc: "Vanilla Creamy Treat", img: "ice-cream.png" },
+            { id: 12, name: "Buddy Coke", price: 19.90, desc: "Refreshing 440ml", img: "coke.png" }
+        ];
+
+        const areaStores = {
+            "Sandton": ["Sandton City", "Grayston Drive", "Sandton Gautrain"],
+            "Rosebank": ["Rosebank Mall", "The Zone", "Oxford Road"],
+            "Soweto": ["Maponya Mall", "Jabulani Mall", "Soweto Towers"],
+            "Pretoria": ["Menlyn Park", "Brooklyn Mall", "Hatfield"],
+            "Cape Town": ["V&A Waterfront", "Sea Point", "Canal Walk"]
+        };
+
+        let cart = [];
+        let orderHistory = JSON.parse(localStorage.getItem('kfc_orders')) || [];
+
+        window.onload = () => {
             document.getElementById('auth-overlay').style.display = 'flex';
-        } else {
-            updateUserUI(user);
+            renderMenu();
         }
-        renderMenu();
-    }
 
-    function handleAuth() {
-        const name = document.getElementById('user-name').value;
-        const phone = document.getElementById('user-phone').value;
-        if(name && phone) {
+        function handleAuth() {
+            const nameInput = document.getElementById('user-name');
+            const phoneInput = document.getElementById('user-phone');
+            const name = nameInput.value;
+            const phone = phoneInput.value;
+
+            // Regex for letters only
+            const nameRegex = /^[A-Za-z\s]+$/;
+            // Regex for exactly 10 digits
+            const phoneRegex = /^\d{10}$/;
+
+            if (!nameRegex.test(name)) {
+                alert("Please use letters only for your name.");
+                return;
+            }
+            if (!phoneRegex.test(phone)) {
+                alert("Please enter a valid 10-digit cellphone number.");
+                return;
+            }
+
             const user = {name, phone};
-            localStorage.setItem('kfc_user', JSON.stringify(user));
+            sessionStorage.setItem('kfc_user', JSON.stringify(user));
             document.getElementById('auth-overlay').style.display = 'none';
             updateUserUI(user);
         }
-    }
 
-    function handleLogout() {
-        localStorage.removeItem('kfc_user');
-        location.reload();
-    }
+        function handleLogout() {
+            sessionStorage.removeItem('kfc_user');
+            location.reload();
+        }
 
-    function addAnotherProfile() {
-        document.getElementById('profile-drawer').classList.remove('open');
-        document.getElementById('auth-overlay').style.display = 'flex';
-    }
+        function addAnotherProfile() {
+            document.getElementById('profile-drawer').classList.remove('open');
+            document.getElementById('auth-overlay').style.display = 'flex';
+        }
 
-    function updateUserUI(user) {
-        document.getElementById('user-display').innerText = `Hi, ${user.name.split(' ')[0]}`;
-        document.getElementById('profile-name').innerText = user.name;
-        document.getElementById('profile-phone').innerText = user.phone;
-        renderHistory();
-    }
+        function updateUserUI(user) {
+            document.getElementById('user-display').innerText = `Hi, ${user.name.split(' ')[0]}`;
+            document.getElementById('user-display').classList.remove('hidden');
+            document.getElementById('profile-name').innerText = user.name;
+            document.getElementById('profile-phone').innerText = user.phone;
+            renderHistory();
+        }
 
-    function searchStores() {
-        const query = document.getElementById('store-search').value.toLowerCase();
-        const resultsBox = document.getElementById('store-results');
-        if(query.length < 2) { resultsBox.classList.add('hidden'); return; }
-        let found = [];
-        for (let area in areaStores) {
-            if (area.toLowerCase().includes(query)) {
-                areaStores[area].forEach(store => found.push({name: store, area: area}));
+        function searchStores() {
+            const query = document.getElementById('store-search').value.toLowerCase();
+            const resultsBox = document.getElementById('store-results');
+            if(query.length < 2) {
+                resultsBox.classList.add('hidden');
+                return;
+            }
+            let found = [];
+            for (let area in areaStores) {
+                if (area.toLowerCase().includes(query)) {
+                    areaStores[area].forEach(store => found.push({name: store, area: area}));
+                }
+            }
+            if (found.length > 0) {
+                resultsBox.innerHTML = found.map(s => `<div class="p-3 hover:bg-red-50 cursor-pointer border-b border-gray-50" onclick="selectStore('${s.name}')"> <p class="text-xs font-bold">${s.name}</p> <p class="text-[9px] uppercase text-gray-400 font-black">${s.area}</p> </div>` ).join('');
+                resultsBox.classList.remove('hidden');
+            } else {
+                resultsBox.innerHTML = `<p class="p-3 text-[10px] text-gray-400 uppercase">No stores found</p>`;
             }
         }
-        if (found.length > 0) {
-            resultsBox.innerHTML = found.map(s => `
-                <div class="p-3 hover:bg-red-50 cursor-pointer border-b border-gray-50" onclick="selectStore('${s.name}')">
-                    <p class="text-xs font-bold">${s.name}</p>
-                    <p class="text-[9px] uppercase text-gray-400 font-black">${s.area}</p>
-                </div>
-            `).join('');
-            resultsBox.classList.remove('hidden');
-        } else {
-            resultsBox.innerHTML = `<p class="p-3 text-[10px] text-gray-400 uppercase">No stores found</p>`;
-        }
-    }
 
-    function selectStore(name) {
-        document.getElementById('store-search').value = name;
-        document.getElementById('store-results').classList.add('hidden');
-        document.getElementById('active-store').classList.remove('hidden');
-        document.getElementById('active-store-name').innerText = name;
-    }
-
-    function renderMenu() {
-        const menuGrid = document.getElementById('menu-grid');
-        menuGrid.innerHTML = menuItems.map(item => `
-            <div class="menu-card bg-white p-6 rounded-2xl group cursor-pointer" onmouseenter="handleKrusherShake(this, '${item.name}')">
-                <div class="overflow-hidden rounded-xl mb-4 bg-gray-50 h-48 flex items-center justify-center">
-                    <img class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" src="${item.img}" alt="${item.name}">
-                </div>
-                <h3 class="font-headline font-black text-xl uppercase">${item.name}</h3>
-                <p class="text-gray-500 text-sm mb-2 font-bold">${item.desc}</p>
-                <p class="font-black text-primary text-xl mb-4 text-right">R ${item.price.toFixed(2)}</p>
-                <button onclick="addToCart(${item.id})" class="shiny-btn w-full text-white font-bold py-3 rounded-xl uppercase text-xs tracking-widest">Add to Bucket</button>
-            </div>
-        `).join('');
-    }
-
-    function handleKrusherShake(card, name) {
-        if(name.toLowerCase().includes('krusher')) {
-            const img = card.querySelector('img');
-            gsap.to(img, { x: 4, duration: 0.1, repeat: 5, yoyo: true, ease: "none" });
-        }
-    }
-
-    function scrollToMenu() {
-        document.getElementById('menu-section').scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function toggleCart() { document.getElementById('cart-drawer').classList.toggle('open'); }
-    function toggleProfile() { document.getElementById('profile-drawer').classList.toggle('open'); }
-    
-    function toggleCheckout() {
-        if(cart.length === 0) return alert("Add items to your bucket first!");
-        const overlay = document.getElementById('checkout-overlay');
-        if (overlay.style.display !== 'flex') {
-            triggerCelebration();
-        } else {
-            overlay.style.display = 'none';
-        }
-    }
-
-    function triggerCelebration() {
-        const celOverlay = document.getElementById('celebration-overlay');
-        const savingsText = document.getElementById('savings-text');
-        const bucket = document.getElementById('pop-bucket');
-        const sum = cart.reduce((s, i) => s + i.price, 0);
-        const savings = cart.length === 4 ? (sum - 100) : 0;
-        savingsText.innerText = savings > 0 ? `You just saved R ${savings.toFixed(2)}!` : `Building the ultimate bucket!`;
-        celOverlay.style.display = 'flex';
-        gsap.fromTo(bucket, { scale: 0, rotation: -180 }, { scale: 1, rotation: 0, duration: 0.8, ease: "back.out(1.7)" });
-        for(let i=0; i<50; i++) { createConfetti(); }
-        setTimeout(() => {
-            gsap.to(celOverlay, { opacity: 0, duration: 0.5, onComplete: () => {
-                celOverlay.style.display = 'none';
-                celOverlay.style.opacity = 1;
-                showCheckoutFinal();
-            }});
-        }, 2500);
-    }
-
-    function createConfetti() {
-        const colors = ['#e4002b', '#ffffff', '#b60020', '#ffd700'];
-        const confetti = document.createElement('div');
-        confetti.className = 'confetti';
-        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        confetti.style.left = '50%';
-        confetti.style.top = '50%';
-        document.getElementById('celebration-overlay').appendChild(confetti);
-        const angle = Math.random() * Math.PI * 2;
-        const velocity = 10 + Math.random() * 20;
-        const x = Math.cos(angle) * velocity * 20;
-        const y = Math.sin(angle) * velocity * 20;
-        gsap.to(confetti, { x: x, y: y, rotation: Math.random() * 720, duration: 1 + Math.random() * 2, opacity: 0, ease: "power2.out", onComplete: () => confetti.remove() });
-    }
-
-    function showCheckoutFinal() {
-        const overlay = document.getElementById('checkout-overlay');
-        overlay.style.display = 'flex';
-        updateTotalWithHope();
-    }
-
-    function updateTotalWithHope() {
-        const isDonating = document.getElementById('hope-donation').checked;
-        const sum = cart.reduce((s, i) => s + i.price, 0);
-        let total = cart.length === 4 ? 100 : sum;
-        if(isDonating) total += 2;
-        document.getElementById('checkout-summary').innerHTML = `
-            <div class="flex justify-between mb-1"><span>Subtotal:</span><span>R ${cart.length === 4 ? '100.00' : sum.toFixed(2)}</span></div>
-            ${isDonating ? '<div class="flex justify-between text-primary mb-1"><span>Add Hope:</span><span>R 2.00</span></div>' : ''}
-            <div class="flex justify-between text-lg pt-2 border-t mt-2"><span>Total:</span><span>R ${total.toFixed(2)}</span></div>
-        `;
-    }
-
-    function addToCart(id) {
-        if(cart.length >= 4) return alert("Bucket List Deal: Max 4 items!");
-        const item = menuItems.find(i => i.id === id);
-        cart.push(item);
-        
-        // Ensure drawer opens
-        document.getElementById('cart-drawer').classList.add('open');
-        
-        updateCartUI();
-        gsap.from("#nav-total", { scale: 1.3, color: "#e4002b", duration: 0.4, ease: "back.out" });
-    }
-
-    function updateCartUI() {
-        const container = document.getElementById('cart-items');
-        const badge = document.getElementById('cart-count-badge');
-        const totalDisplay = document.getElementById('cart-total-display');
-        
-        container.innerHTML = cart.map((item, index) => `
-            <div class="flex items-center gap-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                <img src="${item.img}" class="w-12 h-12 object-contain bg-white rounded-lg p-1">
-                <div class="flex-1">
-                    <p class="font-bold text-sm uppercase">${item.name}</p>
-                    <p class="text-primary font-black text-xs">R ${item.price.toFixed(2)}</p>
-                </div>
-                <button onclick="removeFromCart(${index})" class="text-gray-300 hover:text-red-500 transition-colors">
-                    <span class="material-symbols-outlined text-sm">delete</span>
-                </button>
-            </div>
-        `).join('');
-
-        let sum = cart.reduce((s, i) => s + i.price, 0);
-        const fill = document.getElementById('liquid-fill');
-        if(fill) fill.style.width = (cart.length / 4) * 100 + '%';
-
-        if (cart.length === 4) {
-            totalDisplay.innerText = "R 100.00";
-            totalDisplay.className = "text-3xl font-black text-green-600 font-headline";
-            document.getElementById('deal-status').innerText = "BUCKET LIST PRICE ACTIVATED!";
-        } else {
-            totalDisplay.innerText = `R ${sum.toFixed(2)}`;
-            totalDisplay.className = "text-3xl font-black text-primary font-headline";
-            document.getElementById('deal-status').innerText = `${cart.length}/4 items added`;
-        }
-        document.getElementById('empty-msg').style.display = cart.length > 0 ? 'none' : 'block';
-        badge.style.display = cart.length > 0 ? 'flex' : 'none';
-        badge.innerText = cart.length;
-
-        // FORCE TRIGGER SUGGESTIONS
-        checkSuggestions();
-    }
-
-    function removeFromCart(index) {
-        cart.splice(index, 1);
-        updateCartUI();
-    }
-
-    function checkSuggestions() {
-        const box = document.getElementById('suggestions-box');
-        const content = document.getElementById('suggestion-content');
-        const quickAdd = document.getElementById('suggestion-quick-add');
-        
-        // Hide if cart is empty or exactly 4 items
-        if (cart.length === 0 || cart.length >= 4) {
-            box.style.display = 'none';
-            return;
+        function selectStore(name) {
+            document.getElementById('store-search').value = name;
+            document.getElementById('store-results').classList.add('hidden');
+            document.getElementById('active-store').classList.remove('hidden');
+            document.getElementById('active-store-name').innerText = name;
         }
 
-        // Detect contents
-        const hasMain = cart.some(i => ["burger", "twister", "boxmaster"].some(k => i.name.toLowerCase().includes(k)));
-        const hasDrink = cart.some(i => ["coke", "mojito", "krusher"].some(k => i.name.toLowerCase().includes(k)));
-        const hasSnack = cart.some(i => ["wings", "pops", "chips"].some(k => i.name.toLowerCase().includes(k)));
-
-        let sText = "";
-        let sId = null;
-
-        // Burger/Twister -> Suggest Drink
-        if (hasMain && !hasDrink) {
-            sText = "Wash that down! Add a Buddy Coke or Mojito Krusher?";
-            sId = 12; // Buddy Coke
-        } 
-        // Main + Drink -> Suggest Snack
-        else if (hasMain && hasDrink && !hasSnack) {
-            sText = "Grab a snack! How about some Dunked Wings or Pops?";
-            sId = 9; // KFC Pops
-        }
-        // Bucket nearly full -> Suggest Sweet Treat
-        else if (cart.length === 3) {
-            sText = "Grab a sweet treat! Vanilla Ice Cream would be perfect.";
-            sId = 11; // Soft Swirl
-        }
-        // Fallback
-        else {
-            sText = "Building a masterpiece! Add one more for R100.";
-            sId = 3; // Large Chips
+        function renderMenu() {
+            const menuGrid = document.getElementById('menu-grid');
+            menuGrid.innerHTML = menuItems.map(item => `<div class="menu-card bg-white p-6 rounded-2xl group cursor-pointer" onmouseenter="handleKrusherShake(this, '${item.name}')"> <div class="overflow-hidden rounded-xl mb-4 bg-gray-50 h-48 flex items-center justify-center"> <img class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" src="${item.img}" alt="${item.name}"> </div> <h3 class="font-headline font-black text-xl uppercase">${item.name}</h3> <p class="text-gray-500 text-sm mb-2 font-bold">${item.desc}</p> <p class="font-black text-primary text-xl mb-4 text-right">R ${item.price.toFixed(2)}</p> <button onclick="addToCart(${item.id})" class="shiny-btn w-full text-white font-bold py-3 rounded-xl uppercase text-xs tracking-widest">Add to Bucket</button> </div>` ).join('');
         }
 
-        // Avoid re-suggesting what is already there
-        if (cart.some(i => i.id === sId)) {
-            sId = (sId === 11) ? 3 : 11;
-            sText = "Complete your bucket list with these extras!";
+        function handleKrusherShake(card, name) {
+            if(name.toLowerCase().includes('krusher')) {
+                const img = card.querySelector('img');
+                gsap.to(img, { x: 4, duration: 0.1, repeat: 5, yoyo: true, ease: "none" });
+            }
         }
 
-        const item = menuItems.find(i => i.id === sId);
-        content.innerText = sText;
-        quickAdd.innerHTML = `
-            <button onclick="addToCart(${item.id})" class="glow-button w-full bg-white border-2 border-primary text-primary font-black py-3 rounded-2xl text-[10px] transition-all duration-300 uppercase tracking-widest flex items-center justify-center gap-2">
-                Quick Add ${item.name} <span class="material-symbols-outlined text-xs">add_circle</span>
-            </button>
-        `;
-
-        box.style.display = 'block';
-        gsap.fromTo(box, { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: "back.out(1.7)" });
-    }
-
-    function processPayment() {
-        const orderNum = "KFC-" + Math.floor(1000 + Math.random() * 9000);
-        document.getElementById('success-order-num').innerText = "#" + orderNum;
-        const sum = cart.reduce((s, i) => s + i.price, 0);
-        const isDonating = document.getElementById('hope-donation').checked;
-        let total = cart.length === 4 ? 100 : sum;
-        if(isDonating) total += 2;
-        const order = { id: orderNum, date: new Date().toLocaleDateString(), items: cart.map(i => i.name).join(', '), total: total.toFixed(2) };
-        orderHistory.unshift(order);
-        localStorage.setItem('kfc_orders', JSON.stringify(orderHistory));
-        document.getElementById('checkout-overlay').style.display = 'none';
-        document.getElementById('order-success-overlay').style.display = 'flex';
-        cart = [];
-        updateCartUI();
-        renderHistory();
-    }
-
-    function closeSuccess() { document.getElementById('order-success-overlay').style.display = 'none'; }
-
-    function renderHistory() {
-        const historyBox = document.getElementById('order-history');
-        if(historyBox && orderHistory.length > 0) {
-            historyBox.innerHTML = orderHistory.map(order => `
-                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                    <div class="flex justify-between mb-2">
-                        <span class="text-[9px] font-black text-gray-400 uppercase">${order.date} | ${order.id}</span>
-                        <span class="text-primary font-black text-xs">R ${order.total}</span>
-                    </div>
-                    <p class="text-xs font-bold text-gray-700">${order.items}</p>
-                </div>
-            `).join('');
+        function scrollToMenu() {
+            document.getElementById('menu-section').scrollIntoView({ behavior: 'smooth' });
         }
-    }
 
-    const bucketTl = gsap.timeline({ repeat: -1, repeatDelay: 2 });
-    bucketTl.from("#kfc-bucket", { y: -500, rotation: 30, duration: 1, ease: "bounce.out" })
-            .to("#kfc-bucket", { rotation: -60, x: -50, duration: 0.5, ease: "power2.inOut" }, "+=0.5")
-            .to(".food-item", { opacity: 1, x: () => -150 - Math.random() * 200, y: () => 150 + Math.random() * 150, rotation: () => Math.random() * 360, duration: 0.8, stagger: 0.1, ease: "expo.out" }, "-=0.2");
-</script>
+        function toggleCart() {
+            document.getElementById('cart-drawer').classList.toggle('open');
+        }
 
+        function toggleProfile() {
+            document.getElementById('profile-drawer').classList.toggle('open');
+        }
+
+        function toggleCheckout() {
+            if(cart.length === 0) return alert("Add items to your bucket first!");
+            const overlay = document.getElementById('checkout-overlay');
+            if (overlay.style.display !== 'flex') {
+                triggerCelebration();
+            } else {
+                overlay.style.display = 'none';
+            }
+        }
+
+        function triggerCelebration() {
+            const celOverlay = document.getElementById('celebration-overlay');
+            const savingsText = document.getElementById('savings-text');
+            const bucket = document.getElementById('pop-bucket');
+            const sum = cart.reduce((s, i) => s + i.price, 0);
+            const savings = cart.length === 4 ? (sum - 100) : 0;
+            savingsText.innerText = savings > 0 ? `You just saved R ${savings.toFixed(2)}!` : "Building the ultimate bucket!";
+            celOverlay.style.display = 'flex';
+            gsap.fromTo(bucket, { scale: 0, rotation: -180 }, { scale: 1, rotation: 0, duration: 0.8, ease: "back.out(1.7)" });
+            for(let i=0; i<50; i++) { createConfetti(); }
+            setTimeout(() => {
+                gsap.to(celOverlay, { opacity: 0, duration: 0.5, onComplete: () => {
+                    celOverlay.style.display = 'none';
+                    celOverlay.style.opacity = 1;
+                    showCheckoutFinal();
+                }});
+            }, 2500);
+        }
+
+        function createConfetti() {
+            const colors = ['#e4002b', '#ffffff', '#b60020', '#ffd700'];
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.left = '50%';
+            confetti.style.top = '50%';
+            document.getElementById('celebration-overlay').appendChild(confetti);
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = 10 + Math.random() * 20;
+            const x = Math.cos(angle) * velocity * 20;
+            const y = Math.sin(angle) * velocity * 20;
+            gsap.to(confetti, { x: x, y: y, rotation: Math.random() * 720, duration: 1 + Math.random() * 2, opacity: 0, ease: "power2.out", onComplete: () => confetti.remove() });
+        }
+
+        function showCheckoutFinal() {
+            const overlay = document.getElementById('checkout-overlay');
+            overlay.style.display = 'flex';
+            updateTotalWithHope();
+        }
+
+        function updateTotalWithHope() {
+            const isDonating = document.getElementById('hope-donation').checked;
+            const sum = cart.reduce((s, i) => s + i.price, 0);
+            let total = cart.length === 4 ? 100 : sum;
+            if(isDonating) total += 2;
+            document.getElementById('checkout-summary').innerHTML = `<div class="flex justify-between mb-1"><span>Subtotal:</span><span>R ${cart.length === 4 ? '100.00' : sum.toFixed(2)}</span></div> ${isDonating ? '<div class="flex justify-between text-primary mb-1"><span>Add Hope:</span><span>R 2.00</span></div>' : ''} <div class="flex justify-between text-lg pt-2 border-t mt-2"><span>Total:</span><span>R ${total.toFixed(2)}</span></div>` ;
+        }
+
+        function addToCart(id) {
+            if(cart.length >= 4) return alert("Bucket List Deal: Max 4 items!");
+            const item = menuItems.find(i => i.id === id);
+            cart.push(item);
+            document.getElementById('cart-drawer').classList.add('open');
+            updateCartUI();
+            gsap.from("#nav-total", { scale: 1.3, color: "#e4002b", duration: 0.4, ease: "back.out" });
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById('cart-items');
+            const badge = document.getElementById('cart-count-badge');
+            const totalDisplay = document.getElementById('cart-total-display');
+            container.innerHTML = cart.map((item, index) => `<div class="flex items-center gap-4 bg-gray-50 p-3 rounded-xl border border-gray-100"> <img src="${item.img}" class="w-12 h-12 object-contain bg-white rounded-lg p-1"> <div class="flex-1"> <p class="font-bold text-sm uppercase">${item.name}</p> <p class="text-primary font-black text-xs">R ${item.price.toFixed(2)}</p> </div> <button onclick="removeFromCart(${index})" class="text-gray-300 hover:text-red-500 transition-colors"> <span class="material-symbols-outlined text-sm">delete</span> </button> </div>` ).join('');
+            let sum = cart.reduce((s, i) => s + i.price, 0);
+            const fill = document.getElementById('liquid-fill');
+            if(fill) fill.style.width = (cart.length / 4) * 100 + '%';
+            if (cart.length === 4) {
+                totalDisplay.innerText = "R 100.00";
+                totalDisplay.className = "text-3xl font-black text-green-600 font-headline";
+                document.getElementById('deal-status').innerText = "BUCKET LIST PRICE ACTIVATED!";
+            } else {
+                totalDisplay.innerText = `R ${sum.toFixed(2)}`;
+                totalDisplay.className = "text-3xl font-black text-primary font-headline";
+                document.getElementById('deal-status').innerText = `${cart.length}/4 items added`;
+            }
+            document.getElementById('empty-msg').style.display = cart.length > 0 ? 'none' : 'block';
+            badge.style.display = cart.length > 0 ? 'flex' : 'none';
+            badge.innerText = cart.length;
+            checkSuggestions();
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartUI();
+        }
+
+        function checkSuggestions() {
+            const box = document.getElementById('suggestions-box');
+            const content = document.getElementById('suggestion-content');
+            const quickAdd = document.getElementById('suggestion-quick-add');
+            if (cart.length === 0 || cart.length >= 4) {
+                box.style.display = 'none';
+                return;
+            }
+            const hasMain = cart.some(i => ["burger", "twister", "boxmaster"].some(k => i.name.toLowerCase().includes(k)));
+            const hasDrink = cart.some(i => ["coke", "mojito", "krusher"].some(k => i.name.toLowerCase().includes(k)));
+            const hasSnack = cart.some(i => ["wings", "pops", "chips"].some(k => i.name.toLowerCase().includes(k)));
+            let sText = ""; let sId = null;
+            if (hasMain && !hasDrink) { sText = "Wash that down! Add a Buddy Coke or Mojito Krusher?"; sId = 12; }
+            else if (hasMain && hasDrink && !hasSnack) { sText = "Grab a snack! How about some Dunked Wings or Pops?"; sId = 9; }
+            else if (cart.length === 3) { sText = "Grab a sweet treat! Vanilla Ice Cream would be perfect."; sId = 11; }
+            else { sText = "Building a masterpiece! Add one more for R100."; sId = 3; }
+            if (cart.some(i => i.id === sId)) { sId = (sId === 11) ? 3 : 11; sText = "Complete your bucket list with these extras!"; }
+            const item = menuItems.find(i => i.id === sId);
+            content.innerText = sText;
+            quickAdd.innerHTML = `<button onclick="addToCart(${item.id})" class="glow-button w-full bg-white border-2 border-primary text-primary font-black py-3 rounded-2xl text-[10px] transition-all duration-300 uppercase tracking-widest flex items-center justify-center gap-2"> Quick Add ${item.name} <span class="material-symbols-outlined text-xs">add_circle</span> </button>` ;
+            box.style.display = 'block';
+            gsap.fromTo(box, { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: "back.out(1.7)" });
+        }
+
+        function processPayment() {
+            const orderNum = "KFC-" + Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('success-order-num').innerText = "#" + orderNum;
+            const sum = cart.reduce((s, i) => s + i.price, 0);
+            const isDonating = document.getElementById('hope-donation').checked;
+            let total = cart.length === 4 ? 100 : sum;
+            if(isDonating) total += 2;
+            const order = { id: orderNum, date: new Date().toLocaleDateString(), items: cart.map(i => i.name).join(', '), total: total.toFixed(2) };
+            orderHistory.unshift(order);
+            localStorage.setItem('kfc_orders', JSON.stringify(orderHistory));
+            document.getElementById('checkout-overlay').style.display = 'none';
+            document.getElementById('order-success-overlay').style.display = 'flex';
+            cart = [];
+            updateCartUI();
+            renderHistory();
+        }
+
+        function closeSuccess() {
+            document.getElementById('order-success-overlay').style.display = 'none';
+        }
+
+        function renderHistory() {
+            const historyBox = document.getElementById('order-history');
+            if(historyBox && orderHistory.length > 0) {
+                historyBox.innerHTML = orderHistory.map(order => `<div class="bg-gray-50 p-4 rounded-xl border border-gray-100"> <div class="flex justify-between mb-2"> <span class="text-[9px] font-black text-gray-400 uppercase">${order.date} | ${order.id}</span> <span class="text-primary font-black text-xs">R ${order.total}</span> </div> <p class="text-xs font-bold text-gray-700">${order.items}</p> </div>` ).join('');
+            }
+        }
+
+        const bucketTl = gsap.timeline({ repeat: -1, repeatDelay: 2 });
+        bucketTl.from("#kfc-bucket", { y: -500, rotation: 30, duration: 1, ease: "bounce.out" })
+                .to("#kfc-bucket", { rotation: -60, x: -50, duration: 0.5, ease: "power2.inOut" }, "+=0.5")
+                .to(".food-item", { opacity: 1, x: () => -150 - Math.random() * 200, y: () => 150 + Math.random() * 150, rotation: () => Math.random() * 360, duration: 0.8, stagger: 0.1, ease: "expo.out" }, "-=0.2");
+    </script>
 </body>
 </html>
